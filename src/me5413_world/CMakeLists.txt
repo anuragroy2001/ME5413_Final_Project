@@ -20,6 +20,9 @@ find_package(catkin REQUIRED COMPONENTS
   tf2_geometry_msgs
 )
 find_package(gazebo REQUIRED)
+add_definitions(-DBOOST_BIND_GLOBAL_PLACEHOLDERS)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 catkin_package(
   INCLUDE_DIRS include

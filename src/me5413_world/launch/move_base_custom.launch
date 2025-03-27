@@ -1,0 +1,20 @@
+<launch>
+
+  <node pkg="move_base" type="move_base" respawn="false" name="move_base" output="screen">
+
+    <rosparam file="$(find me5413_world)/config/costmap_common_params.yaml" command="load" ns="global_costmap" />
+    <rosparam file="$(find me5413_world)/config/costmap_common_params.yaml" command="load" ns="local_costmap" />
+
+    <rosparam file="$(find me5413_world)/config/local_costmap_params.yaml" command="load" />
+    <rosparam file="$(find me5413_world)/config/global_costmap_params.yaml" command="load" />
+
+    <rosparam file="$(find me5413_world)/config/base_local_planner_params.yaml" command="load" />
+    <rosparam file="$(find me5413_world)/config/move_base_params.yaml" command="load" />
+
+    <!-- <param name="base_global_planner" type="string" value="navfn/NavfnROS" />
+    <param name="base_local_planner" value="base_local_planner/TrajectoryPlannerROS"/> -->
+
+    <remap from="odom" to="odometry/filtered" />
+  </node>
+
+</launch>
