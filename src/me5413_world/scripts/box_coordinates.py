@@ -20,6 +20,7 @@ class BoxCoordinates():
         self.processing = False
 
         self.depth_thresh = 100
+        self.depth_thresh_close = 20 #TODO: change the threshold values
         self.listener = tf.TransformListener()
         self.camera_info = rospy.wait_for_message("/front/rgb/camera_info", CameraInfo)
         self.img_frame = self.camera_info.header.frame_id
@@ -33,7 +34,7 @@ class BoxCoordinates():
 
         self.number = None
         self.coords = []
-        self.num_freq_sub = rospy.Subscriber("/percep/numberData", Int32MultiArray, self.get_number)
+        #self.num_freq_sub = rospy.Subscriber("/percep/numberData", Int32MultiArray, self.get_number)
 
         self.ats = message_filters.ApproximateTimeSynchronizer([self.rgb_sub, self.depth_sub], 10, 0.01)
         self.ats.registerCallback(self.synced_images_callback) 
@@ -70,8 +71,6 @@ class BoxCoordinates():
             self.processing = False
     
     def get_coords(self):
-        depth_thresh = self.depth_thresh
-
         if self.img_curr is None:
                 rospy.logwarn("No image detected for processing..")
                 return
@@ -99,7 +98,7 @@ class BoxCoordinates():
 
                 if 0 <= y_center < self.depth_curr.shape[0] and 0 <= x_center < self.depth_curr.shape[1]:
                     depth = self.depth_curr[y_center, x_center]
-                    if not np.isfinite(depth) or depth <= 0 or depth > depth_thresh:
+                    if not np.isfinite(depth) or depth < self.depth_thresh_close or depth > self.depth_thresh:
                         rospy.logwarn(f"Invalid or out-of-range depth at ({x_center}, {y_center}): {depth}")
                         continue
                 

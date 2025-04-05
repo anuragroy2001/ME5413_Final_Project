@@ -21,6 +21,7 @@ class Image_segmentation:
         self.processing = False
 
         self.depth_thresh = 100 #TODO: change the threshold values
+        self.depth_thresh_close = 20 #TODO: change the threshold values
         self.distance_thresh = 7.0
 
         self.listener = tf.TransformListener()
@@ -36,7 +37,7 @@ class Image_segmentation:
         self.depth_sub = message_filters.Subscriber('/front/depth/image_raw', Image)
 
         #Publisher
-        self.number_database = rospy.Publisher("/percep/numberData", Int32MultiArray, queue_size=1)
+        self.number_database = rospy.Publisher("/percep/numberData", Int32MultiArray, queue_size=1, latch=True)
         
         self.ats = message_filters.ApproximateTimeSynchronizer([self.rgb_sub, self.depth_sub], 10, 0.01)
         self.ats.registerCallback(self.synced_images_callback) 
@@ -68,7 +69,6 @@ class Image_segmentation:
     def ocr_detection_tranfrom(self): 
         """Detect all the numbers in the current frame
             Apply depth thresholding on all the BB and choose the close ones"""
-        depth_thresh = self.depth_thresh
         if self.img_curr is None:
                 rospy.logwarn("No image detected for processing..")
                 return
@@ -93,10 +93,13 @@ class Image_segmentation:
 
             if 0 <= y_center < self.depth_curr.shape[0] and 0 <= x_center < self.depth_curr.shape[1]:
                 depth = self.depth_curr[y_center, x_center]
-                if not np.isfinite(depth) or depth <= 0 or depth > depth_thresh:
+                if not np.isfinite(depth) or depth < self.depth_thresh_close or depth > self.depth_thresh:
                     rospy.logwarn(f"Invalid or out-of-range depth at ({x_center}, {y_center}): {depth}")
                     continue
-                
+
+            if detection[1] in {"0"}:
+                continue
+
             rospy.loginfo("Close number detected, proceeding to transform coordinates and perform checks!!!!")
             X = (x_center - cx) * depth / fx
             Y = (y_center - cy) * depth / fy
