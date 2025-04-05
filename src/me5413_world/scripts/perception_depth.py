@@ -20,9 +20,11 @@ class Image_segmentation:
         self.detected_numbers_positions = {}
         self.processing = False
 
-        self.depth_thresh = 100 #TODO: change the threshold values
-        self.depth_thresh_close = 20 #TODO: change the threshold values
+        # TODO: Fiddle with the following thresholds for better accuracy
+        self.depth_thresh = 100 
+        self.depth_thresh_close = 3.0 
         self.distance_thresh = 7.0
+        self.margin = 10
 
         self.listener = tf.TransformListener()
         self.camera_info = rospy.wait_for_message("/front/rgb/camera_info", CameraInfo)
@@ -96,7 +98,14 @@ class Image_segmentation:
                 if not np.isfinite(depth) or depth < self.depth_thresh_close or depth > self.depth_thresh:
                     rospy.logwarn(f"Invalid or out-of-range depth at ({x_center}, {y_center}): {depth}")
                     continue
-
+            
+            if (
+                x_center < self.margin or x_center > self.img_curr.shape[1] - self.margin or
+                y_center < self.margin or y_center > self.img_curr.shape[0] - self.margin
+            ):
+                rospy.logdebug(f"Skipping digit at edge: ({x_center}, {y_center})")
+                continue
+            
             if detection[1] in {"0"}:
                 continue
 

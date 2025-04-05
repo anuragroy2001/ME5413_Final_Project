@@ -19,8 +19,11 @@ class BoxCoordinates():
         self.bridge = CvBridge()
         self.processing = False
 
+        #TODO: change the threshold values
         self.depth_thresh = 100
-        self.depth_thresh_close = 2.5 #TODO: change the threshold values
+        self.depth_thresh_close = 2.5 
+        self.margin = 10
+
         self.listener = tf.TransformListener()
         self.camera_info = rospy.wait_for_message("/front/rgb/camera_info", CameraInfo)
         self.img_frame = self.camera_info.header.frame_id
@@ -102,6 +105,13 @@ class BoxCoordinates():
                         rospy.logwarn(f"Invalid or out-of-range depth at ({x_center}, {y_center}): {depth}")
                         continue
                 
+                if (
+                x_center < self.margin or x_center > self.img_curr.shape[1] - self.margin or
+                y_center < self.margin or y_center > self.img_curr.shape[0] - self.margin
+                ):
+                    rospy.logdebug(f"Skipping digit at edge: ({x_center}, {y_center})")
+                    continue
+
                 rospy.loginfo("Close number detected, proceeding to transform coordinates and perform checks!!!!")
                 X = (x_center - cx) * depth / fx
                 Y = (y_center - cy) * depth / fy
