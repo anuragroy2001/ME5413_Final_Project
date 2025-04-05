@@ -20,7 +20,7 @@ class BoxCoordinates():
         self.processing = False
 
         self.depth_thresh = 100
-        self.depth_thresh_close = 20 #TODO: change the threshold values
+        self.depth_thresh_close = 2.5 #TODO: change the threshold values
         self.listener = tf.TransformListener()
         self.camera_info = rospy.wait_for_message("/front/rgb/camera_info", CameraInfo)
         self.img_frame = self.camera_info.header.frame_id
@@ -32,7 +32,7 @@ class BoxCoordinates():
         self.rgb_sub = message_filters.Subscriber("/front/rgb/image_raw", Image)
         self.depth_sub = message_filters.Subscriber('/front/depth/image_raw', Image)
 
-        self.number = None
+        self.number = 8
         self.coords = []
         #self.num_freq_sub = rospy.Subscriber("/percep/numberData", Int32MultiArray, self.get_number)
 
@@ -133,7 +133,7 @@ class BoxCoordinates():
                         continue
                 
                 X,Y,Z = transformed_pose.pose.position.x, transformed_pose.pose.position.y, transformed_pose.pose.position.z
-
+                frame_id = transformed_pose.header.frame_id
                 self.coords.append((X,Y,Z))
         
         rospy.loginfo(f"The coordinates of {self.number} detected till now are: {self.coords}")
@@ -145,7 +145,7 @@ class BoxCoordinates():
             return
 
         final_coords = PoseStamped()
-        final_coords.header.frame_id = transformed_pose.header.frame_id
+        final_coords.header.frame_id = self.img_frame
         final_coords.pose.position.x = final_x
         final_coords.pose.position.y = final_y
         final_coords.pose.position.z = final_z
